@@ -1,4 +1,4 @@
-from Lexer import Lexer, Token, VarToken, MonoToken, Error
+from Lexer import Lexer, Token, VarToken, MonoToken, DelToken, Error
 import math
 
 VARIABLES = {}
@@ -17,8 +17,9 @@ class Parser:
     def parse(self):
         # Check if input starts with variable
         if self.current_token and self.current_token.type == 'VAR':
+            # If next token is IS -> assign variable to rest of input (x IS TWO -> VARIABLES['x'] = 2)
             if len(self.tokens) > 1:
-                # If next token is IS -> assign variable to rest of input
+
                 if self.index + 1 < len(self.tokens):
                     if self.tokens[self.index+1].type == 'IS':
                         variable_name = self.current_token.name
@@ -39,6 +40,7 @@ class Parser:
         return self.parse_expression()
 
     def parse_expression(self):
+        # addition and subtraction
         result = self.parse_term()
 
         while self.current_token and self.current_token.type in ['ADD','SUB']:
@@ -51,57 +53,59 @@ class Parser:
         return result
 
     def parse_term(self):
-        result = self.parse_factor()
+        # multiplication and division
+        result = self.parse_exponent()
 
-        while self.current_token and self.current_token.type in ['MUL','DIV','FLD','MOD','POW']:
+        while self.current_token and self.current_token.type in ['MUL','DIV','FLD','MOD']:
             if self.current_token.type == 'MUL':
                 self.next()
-                result *= self.parse_factor()
-            elif self.current_token.type == 'MUL':
-                self.next()
-                result *= self.parse_factor()
+                result *= self.parse_exponent()
             elif self.current_token.type == 'DIV':
                 self.next()
-                divisor = self.parse_factor()
+                divisor = self.parse_exponent()
                 if divisor == 0:
                     return 'Error: Division by zero'
                 else:
                     result /= divisor
             elif self.current_token.type == 'FLD':
                 self.next()
-                divisor = self.parse_factor()
+                divisor = self.parse_exponent()
                 if divisor == 0:
                     return 'Error: Division by zero'
                 else:
                     result //= divisor
             elif self.current_token.type == 'MOD':
                 self.next()
-                divisor = self.parse_factor()
+                divisor = self.parse_exponent()
                 if divisor == 0:
                     return 'Error: Division by zero'
                 else:
                     result %= divisor
-            elif self.current_token.type == 'POW':
-                self.next()
-                result **= self.parse_factor()
+        return result
+
+    def parse_exponent(self):
+        # exponent
+        result = self.parse_factor()
+
+        while self.current_token and self.current_token.type == 'POW':
+            self.next()
+            result **= self.parse_factor()
+
         return result
 
     def parse_factor(self):
+        # variables, numbers, negative, parentheses, monos
         token = self.current_token
         if isinstance(token,VarToken) and token.type == 'VAR':
-            # self.get_variable_value()
             _ = self.get_variable_value()
-            self.next()
-            return float(_) if '.' in str(_) else int(_)
-
-        # elif isinstance(token, MonoToken):
-        #     if token.type in ['CLG', 'FLR', 'RND']:
-        #         if token.type == 'CLG':
-        #             return math.ceil(self.parse_factor())
-        #         elif token.type == 'FLR':
-        #             return math.floor(self.parse_factor())
-        #         elif token.type == 'RND':
-        #             return round(self.parse_factor())
+            if _:
+                try:
+                    self.next()
+                    return float(_) if '.' in str(_) else int(_)
+                except:
+                    return f'Variable "{self.current_token.name}" must be a number'
+            else:
+                return f'Variable "{self.current_token.name}"'
 
         elif isinstance(token,Token) and token.type in ['INT','FLT']:
             self.next()
@@ -123,9 +127,11 @@ class Parser:
             if self.current_token.type == 'CLG':
                 self.next()
                 result = math.ceil(self.parse_expression())
+                return result
             elif self.current_token.type == 'FLR':
                 self.next()
                 result = math.floor(self.parse_expression())
+                return result
             elif self.current_token.type == 'RND':
                 self.next()
                 result = round(self.parse_expression())
@@ -143,31 +149,7 @@ class Parser:
         if self.current_token.name in VARIABLES:
             return VARIABLES[self.current_token.name]
         else:
-            print(f'Variable "{self.current_token.name}" unassigned')
-
-
-def mono_func(line,mono,modifier):
-    # avoids repeating code for RND, CLG, FLR
-    if mono and line.upper().startswith(mono):
-        line = line[len(mono)+1:].strip() if line[len(mono)+1] != ' ' else line[len(mono):].strip()
-        lexer = Lexer(line)
-        tokens = lexer.make_tokens()
-        parser = Parser(tokens)
-        result = parser.parse()
-        result = modifier(result)
-        print(result)
-
-def round_to(line):
-    # allows rounding to multi-digit numbers and negative numbers
-    line = line[len('RND'):]
-    num_str = ''
-
-    for i in range(10):
-        if line[i] in '1234567890-':
-            num_str += line[i]
-        else:
-            continue
-    return int(num_str)
+            return f'Variable "{self.current_token.name}" unassigned'
 
 def main():
     run = True

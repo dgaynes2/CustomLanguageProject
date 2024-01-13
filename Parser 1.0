@@ -1,0 +1,197 @@
+from Lexer import Lexer, Token, VarToken, MonoToken, Error
+import math
+
+VARIABLES = {}
+
+class Parser:
+    def __init__(self, tokens):
+        self.tokens = tokens
+        self.index = -1
+        self.current_token = None
+        self.next()
+
+    def next(self):
+        self.index += 1
+        self.current_token = self.tokens[self.index] if self.index < len(self.tokens) else None
+
+    def parse(self):
+        # Check if input starts with variable
+        if self.current_token and self.current_token.type == 'VAR':
+            if len(self.tokens) > 1:
+                # If next token is IS -> assign variable to rest of input
+                if self.index + 1 < len(self.tokens):
+                    if self.tokens[self.index+1].type == 'IS':
+                        variable_name = self.current_token.name
+                        self.next()  # Move past the variable name
+                        self.next()  # Move past 'IS'
+                        value = self.parse_expression()
+                        VARIABLES[variable_name] = value
+                        return f'Assigned: {variable_name} = {value}'
+                    else:
+                        return self.parse_expression()
+            # only var in line -> print variable value
+            else:
+                if self.current_token.name in VARIABLES:
+                    return VARIABLES[self.current_token.name]
+                else:
+                    return f'Error: variable "{self.current_token.name}" not found'
+
+        return self.parse_expression()
+
+    def parse_expression(self):
+        result = self.parse_term()
+
+        while self.current_token and self.current_token.type in ['ADD','SUB']:
+            if self.current_token.type == 'ADD':
+                self.next()
+                result += self.parse_term()
+            elif self.current_token.type == 'SUB':
+                self.next()
+                result -= self.parse_term()
+        return result
+
+    def parse_term(self):
+        result = self.parse_factor()
+
+        while self.current_token and self.current_token.type in ['MUL','DIV','FLD','MOD','POW']:
+            if self.current_token.type == 'MUL':
+                self.next()
+                result *= self.parse_factor()
+            elif self.current_token.type == 'MUL':
+                self.next()
+                result *= self.parse_factor()
+            elif self.current_token.type == 'DIV':
+                self.next()
+                divisor = self.parse_factor()
+                if divisor == 0:
+                    return 'Error: Division by zero'
+                else:
+                    result /= divisor
+            elif self.current_token.type == 'FLD':
+                self.next()
+                divisor = self.parse_factor()
+                if divisor == 0:
+                    return 'Error: Division by zero'
+                else:
+                    result //= divisor
+            elif self.current_token.type == 'MOD':
+                self.next()
+                divisor = self.parse_factor()
+                if divisor == 0:
+                    return 'Error: Division by zero'
+                else:
+                    result %= divisor
+            elif self.current_token.type == 'POW':
+                self.next()
+                result **= self.parse_factor()
+        return result
+
+    def parse_factor(self):
+        token = self.current_token
+        if isinstance(token,VarToken) and token.type == 'VAR':
+            # self.get_variable_value()
+            _ = self.get_variable_value()
+            self.next()
+            return float(_) if '.' in str(_) else int(_)
+
+        # elif isinstance(token, MonoToken):
+        #     if token.type in ['CLG', 'FLR', 'RND']:
+        #         if token.type == 'CLG':
+        #             return math.ceil(self.parse_factor())
+        #         elif token.type == 'FLR':
+        #             return math.floor(self.parse_factor())
+        #         elif token.type == 'RND':
+        #             return round(self.parse_factor())
+
+        elif isinstance(token,Token) and token.type in ['INT','FLT']:
+            self.next()
+            return float(token.value) if '.' in token.value else int(token.value)
+
+        elif isinstance(token,Token) and token.type == 'NEG':
+            self.next()
+            return -self.parse_factor()
+        # parentheses
+        elif isinstance(token,Token) and token.type == 'L':
+            self.next()
+            result = self.parse_expression()
+            if self.current_token and self.current_token.type != 'R':
+                return 'Error: Mismatched parentheses'
+            self.next()
+            return result
+        # mono tokens
+        elif isinstance(self.current_token, MonoToken):
+            if self.current_token.type == 'CLG':
+                self.next()
+                result = math.ceil(self.parse_expression())
+            elif self.current_token.type == 'FLR':
+                self.next()
+                result = math.floor(self.parse_expression())
+            elif self.current_token.type == 'RND':
+                self.next()
+                result = round(self.parse_expression())
+            return result
+        else:
+            return f"Error: Unexpected token: {token}"
+
+    def show_equation(self, result, with_answer=True):
+        eq_str = ''
+        for token in self.tokens:
+            eq_str += token.value
+        return f'{eq_str} = {result}' if with_answer else eq_str
+
+    def get_variable_value(self):
+        if self.current_token.name in VARIABLES:
+            return VARIABLES[self.current_token.name]
+        else:
+            print(f'Variable "{self.current_token.name}" unassigned')
+
+
+def mono_func(line,mono,modifier):
+    # avoids repeating code for RND, CLG, FLR
+    if mono and line.upper().startswith(mono):
+        line = line[len(mono)+1:].strip() if line[len(mono)+1] != ' ' else line[len(mono):].strip()
+        lexer = Lexer(line)
+        tokens = lexer.make_tokens()
+        parser = Parser(tokens)
+        result = parser.parse()
+        result = modifier(result)
+        print(result)
+
+def round_to(line):
+    # allows rounding to multi-digit numbers and negative numbers
+    line = line[len('RND'):]
+    num_str = ''
+
+    for i in range(10):
+        if line[i] in '1234567890-':
+            num_str += line[i]
+        else:
+            continue
+    return int(num_str)
+
+def main():
+    run = True
+    while run:
+        line = input('> ')
+
+        if line.upper() == 'EXIT':
+            run = False
+        elif line == '':
+            continue
+        # see all variables
+        elif line.strip() == 'VARDICT':
+            print(VARIABLES)
+
+        else:
+            lexer = Lexer(line)
+            tokens = lexer.make_tokens()
+            parser = Parser(tokens)
+            result = parser.parse()
+            print(parser.show_equation(result) if line.endswith('SHEQ') else result)
+
+
+if __name__ == '__main__':
+    main()
+
+# 2.75 * (3 - 5) ^ 4 / 3 -> 14.67
+# TWO DOT SEVEN FIVE MUL L THREE SUB FIVE R POW FOUR DIV THREE

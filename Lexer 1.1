@@ -1,11 +1,12 @@
 import string
 
+# Define sets of characters
 KEYLETS = string.ascii_uppercase
 VARLETS = string.ascii_lowercase + '_'
 LETTERS = KEYLETS + VARLETS
 DIGITS = {'ZERO':'0','ONE':'1','TWO':'2','THREE':'3','FOUR':'4','FIVE':'5','SIX':'6','SEVEN':'7','EIGHT':'8','NINE':'9','DOT':'.'}
 OTHER = {'ADD': '+', 'SUB': '-', 'MUL': '*', 'DIV': '/', 'FLD':'//', 'MOD': '%', 'POW': '**', 'NEG': '-', 'L': '(', 'R': ')'}
-MONOS = {'IS':'IS','CLG':'CLG','FLR':'FLR','RND':'RND','DEL':'DEL'}
+MONOS = {'IS','CLG','FLR','RND','DEL'}
 
 
 ########################################
@@ -24,7 +25,7 @@ class Error:
         return f"{self.error_arrow()}\n{self.__class__.__name__}: {self.message} in positions {self.location} to {self.location + self.length-1}"
 
     def error_arrow(self):
-        # draws ^ under error location
+        # draws ^ under entire error location
         return f"{' ' * (self.location-self.length) + ''}{'^'*self.length}"
 
 ########################################
@@ -173,7 +174,6 @@ class Lexer:
         if num_str:
             final_tokens.append(Token("FLT" if '.' in num_str else "INT",num_str))
 
-        # print(final_tokens)
         return final_tokens
 
 
@@ -188,4 +188,4 @@ def token_test():
         print(lexer.make_tokens())
         testing += 1
 
-# token_test()
+token_test()

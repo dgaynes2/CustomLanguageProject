@@ -1,6 +1,8 @@
 This is a calculator created while learning how to make a custom programming language
 All numbers and operators are represented as uppercase strings
+
   2   -> TWO
+  
   '+' -> ADD
 
 ==NUMBERS==

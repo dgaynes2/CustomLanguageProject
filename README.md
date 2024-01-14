@@ -11,8 +11,11 @@ All numbers and operators are represented as uppercase strings
 The language only acknowledges strings representing single-digit integers. Numbers larger
 
 than nine, negatives, and floats need multiple single-digit numbers placed next to each other
+
       10   -> ONE ZERO
+      
       1.0  -> ONE DOT ZERO
+      
       -1   -> NEG ONE
 
 ==OPERATORS==

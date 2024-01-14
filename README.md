@@ -1,7 +1,7 @@
 This is a calculator created while learning how to make a custom programming language
 All numbers and operators are represented as uppercase strings
-  2 -> TWO
-  ++ -> ADD
+  2   -> TWO
+  '+' -> ADD
 
 ==NUMBERS==
 The language only acknowledges strings representing single-digit integers. Numbers larger
@@ -12,15 +12,15 @@ than nine, negatives, and floats need multiple single-digit numbers placed next 
 
 ==OPERATORS==
 The following list shows the recognized operators (as used in Python) and symbols in the language
-  +   ->  ADD
-  -   ->  SUB
-  *   ->  MUL
-  /   ->  DIV
-  //  ->  FLR
-  %   ->  MOD
-  **  ->  POW
-  (   ->  L
-  )   ->  R
+  '+'   ->  ADD
+  '-'   ->  SUB
+  '*'   ->  MUL
+  '/'   ->  DIV
+  '//'  ->  FLR
+  '%'   ->  MOD
+  '**'  ->  POW
+  '('   ->  L
+  ')'   ->  R
 
 ==MONOS==
 They are probably most similar to statements. Monos will affect the rest of the line, but themselves

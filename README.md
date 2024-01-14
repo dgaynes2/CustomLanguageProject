@@ -1,18 +1,22 @@
 This is a calculator created while learning how to make a custom programming language
+
 All numbers and operators are represented as uppercase strings
 
-    2   -> TWO
+       2  -> TWO
   
-    '+' -> ADD
+      '+' -> ADD
 
 ==NUMBERS==
+
 The language only acknowledges strings representing single-digit integers. Numbers larger
+
 than nine, negatives, and floats need multiple single-digit numbers placed next to each other
       10   -> ONE ZERO
       1.0  -> ONE DOT ZERO
       -1   -> NEG ONE
 
 ==OPERATORS==
+
 The following list shows the recognized operators (as used in Python) and symbols in the language
       '+'   ->  ADD
   
@@ -34,6 +38,7 @@ The following list shows the recognized operators (as used in Python) and symbol
 
 ==MONOS==
 They are probably most similar to statements. Monos will affect the rest of the line, but themselves
+
 don't have a default value.
 
 The first three are placed before what they affect.
@@ -53,6 +58,7 @@ The first three are placed before what they affect.
       SHEQ  -> SHow EQuation      TWO FIVE DIV SIX SHEQ -> 25/6
 
 ==VARIABLES==
+
 Variables can only be represented by lowercase letters and underscores
   
       ONE -> 1
@@ -60,6 +66,7 @@ Variables can only be represented by lowercase letters and underscores
       one -> variable name
 
 To assign variables, start the input with the variable name plus the mono 'IS' plus
+
 the value, which can also be an equation
   
       var_one IS ONE                    -> var_one = 1

@@ -38,9 +38,18 @@ class Parser:
     def handle_var_assignment(self, variable_name):
         # Handle variable assignment, e.g., VAR IS expression
         self.next()  # Move past 'IS'
+        self.next()
         value = self.parse_expression()
         VARIABLES[variable_name] = value
+        # self.next()  # Move past the assignment value
         return f'Assigned: {variable_name} = {value}'
+
+    def get_variable_value(self,variable_name):
+        # Retrieve the value of a variable from the global dictionary
+        if variable_name in VARIABLES:
+            return VARIABLES[variable_name]
+        else:
+            return f'Variable "{variable_name}" unassigned'
 
     def parse_var(self):
         # Parse variable, check for assignment or use existing value
@@ -52,10 +61,12 @@ class Parser:
                 and self.tokens[self.index + 1].type == "IS"
             ):
                 return self.handle_var_assignment(variable_name)
-            elif variable_name in VARIABLES:
-                return VARIABLES[variable_name]
             else:
-                return f'Error: variable "{variable_name}" not found'
+                value = self.get_variable_value(variable_name)
+                if value is not None:
+                    return value
+                else:
+                    return f'Error: variable "{variable_name}" not found'
         return self.parse_expression()
 
     def parse_expression(self):
@@ -112,15 +123,15 @@ class Parser:
         token = self.current_token
         if isinstance(token, VarToken) and token.type == 'VAR':
             # Check for variable assignment and retrieve its value
-            _ = self.get_variable_value()
+            _ = self.get_variable_value(self.current_token.name)
             if _:
                 try:
                     self.next()
                     return float(_) if '.' in str(_) else int(_)
                 except:
-                    return f'Variable "{self.current_token.name}" must be a number'
+                    return f'Variable "{self.current_token}" must be a number'
             else:
-                return f'Variable "{self.current_token.name}"'
+                return f'Variable "{self.current_token}"'
 
         elif isinstance(token, Token) and token.type in ['INT', 'FLT']:
             # Parse integer and float literals
@@ -151,19 +162,13 @@ class Parser:
         eq_str = ''
         for token in self.tokens:
             if isinstance(token, Token):
-                eq_str += token.value
+                eq_str += str(token.value)
             elif isinstance(token, MonoToken) and token.type == 'IS':
                 eq_str += '='
             elif isinstance(token, VarToken):
-                eq_str += token.name
+                eq_str += str(VARIABLES[token.name])
         return eq_str
 
-    def get_variable_value(self):
-        # Retrieve the value of a variable from the global dictionary
-        if self.current_token.name in VARIABLES:
-            return VARIABLES[self.current_token.name]
-        else:
-            return f'Variable "{self.current_token.name}" unassigned'
 
 def delete_variable(line):
     # Delete a variable from the global dictionary

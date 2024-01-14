@@ -21,6 +21,7 @@ than nine, negatives, and floats need multiple single-digit numbers placed next 
 ==OPERATORS==
 
 The following list shows the recognized operators (as used in Python) and symbols in the language
+
       '+'   ->  ADD
   
       '-'   ->  SUB

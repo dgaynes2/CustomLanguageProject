@@ -1,0 +1,39 @@
+class Token:
+    def __init__(self,type_,value):
+        self.value = value
+        self.type = type_
+
+    def __repr__(self):
+        # 'INT:THREE'
+        return f"{self.type}:{self.value}"
+
+class VarToken:
+    def __init__(self,name,value):
+        self.name = name
+        self.value = value
+        self.type = 'VAR'
+
+    def __repr__(self):
+        # 'x:THREE'
+        return f"{self.name}:{self.value}"
+
+class MonoToken:
+    def __init__(self,type_):
+        self.type = type_
+
+    def __repr__(self):
+        # 'IS'
+        return f"{self.type}"
+
+class ConstantToken:
+    def __init__(self,type_):
+        self.type = type_
+
+    def __repr__(self):
+        # 'IS'
+        return f"{self.type}"
+
+class DelToken:
+    def __repr__(self):
+        # 'DEL'
+        return "DEL"

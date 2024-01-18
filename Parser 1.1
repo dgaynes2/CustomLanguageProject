@@ -1,10 +1,17 @@
-from Lexer import Lexer, Token, VarToken, MonoToken, DelToken, Error
+from Lexer import Lexer
+import Tokens
+import Errors
 import math
 
 # Global dictionary to store variable assignments
 VARIABLES = {}
 
 class Parser:
+    CONSTANTS = {
+        'PI':math.pi,
+        'E':math.e,
+    }
+
     def __init__(self, tokens):
         self.tokens = tokens
         self.index = -1
@@ -115,13 +122,21 @@ class Parser:
             result = math.floor(self.parse_expression())
         elif mono_type == 'RND':
             result = round(self.parse_expression())
+        elif mono_type == 'LOG':
+            result = math.log(self.parse_expression())
+        elif mono_type == 'SIN':
+            result = math.sin(self.parse_expression())
+        elif mono_type == 'COS':
+            result = math.cos(self.parse_expression())
+        elif mono_type == 'TAN':
+            result = math.tan(self.parse_expression())
 
         return result
 
     def parse_factor(self):
         # Parse variables, numbers, negation, parentheses, and monadic operations
         token = self.current_token
-        if isinstance(token, VarToken) and token.type == 'VAR':
+        if isinstance(token, Tokens.VarToken) and token.type == 'VAR':
             # Check for variable assignment and retrieve its value
             _ = self.get_variable_value(self.current_token.name)
             if _:
@@ -133,17 +148,17 @@ class Parser:
             else:
                 return f'Variable "{self.current_token}"'
 
-        elif isinstance(token, Token) and token.type in ['INT', 'FLT']:
+        elif isinstance(token, Tokens.Token) and token.type in ['INT', 'FLT']:
             # Parse integer and float literals
             self.next()
             return float(token.value) if '.' in token.value else int(token.value)
 
-        elif isinstance(token, Token) and token.type == 'NEG':
+        elif isinstance(token, Tokens.Token) and token.type == 'NEG':
             # Parse negation
             self.next()
             return -self.parse_factor()
         # Parse parentheses
-        elif isinstance(token, Token) and token.type == 'L':
+        elif isinstance(token, Tokens.Token) and token.type == 'L':
             self.next()
             result = self.parse_expression()
             if self.current_token and self.current_token.type != 'R':
@@ -151,9 +166,15 @@ class Parser:
             self.next()
             return result
         # Parse monadic operations
-        elif isinstance(self.current_token, MonoToken):
+        elif isinstance(self.current_token, Tokens.MonoToken):
             mono_type = self.current_token.type
             return self.handle_mono_token(mono_type)
+        # constants
+        elif isinstance(token,Tokens.ConstantToken):
+            if token.type in self.CONSTANTS:
+                self.next()
+                return self.CONSTANTS[token.type]
+
         else:
             return f"Error: Unexpected token: {token}"
 
@@ -161,11 +182,11 @@ class Parser:
         # Generate a string representation of the equation
         eq_str = ''
         for token in self.tokens:
-            if isinstance(token, Token):
+            if isinstance(token, Tokens.Token):
                 eq_str += str(token.value)
-            elif isinstance(token, MonoToken) and token.type == 'IS':
+            elif isinstance(token, Tokens.MonoToken) and token.type == 'IS':
                 eq_str += '='
-            elif isinstance(token, VarToken):
+            elif isinstance(token, Tokens.VarToken):
                 eq_str += str(VARIABLES[token.name])
         return eq_str
 

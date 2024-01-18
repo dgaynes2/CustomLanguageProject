@@ -1,4 +1,6 @@
 import string
+import Tokens
+import Errors
 
 # Define sets of characters
 KEYLETS = string.ascii_uppercase
@@ -6,63 +8,9 @@ VARLETS = string.ascii_lowercase + '_'
 LETTERS = KEYLETS + VARLETS
 DIGITS = {'ZERO':'0','ONE':'1','TWO':'2','THREE':'3','FOUR':'4','FIVE':'5','SIX':'6','SEVEN':'7','EIGHT':'8','NINE':'9','DOT':'.'}
 OTHER = {'ADD': '+', 'SUB': '-', 'MUL': '*', 'DIV': '/', 'FLD':'//', 'MOD': '%', 'POW': '**', 'NEG': '-', 'L': '(', 'R': ')'}
-MONOS = {'IS','CLG','FLR','RND','DEL'}
+MONOS = {'IS','CLG','FLR','RND','DEL','LOG','SIN','COS','TAN'}
+CONSTANTS = {'PI','E'} # add new constants to parser as well
 
-
-########################################
-# ERROR
-########################################
-
-class Error:
-    __slots__ = ('location','length','message')
-
-    def __init__(self,location,length,message=None):
-        self.location = location
-        self.length = length
-        self.message = message
-
-    def __str__(self):
-        return f"{self.error_arrow()}\n{self.__class__.__name__}: {self.message} in positions {self.location} to {self.location + self.length-1}"
-
-    def error_arrow(self):
-        # draws ^ under entire error location
-        return f"{' ' * (self.location-self.length) + ''}{'^'*self.length}"
-
-########################################
-# TOKENS
-########################################
-
-class Token:
-    def __init__(self,type_,value):
-        self.value = value
-        self.type = type_
-
-    def __repr__(self):
-        # 'INT:THREE'
-        return f"{self.type}:{self.value}"
-
-class VarToken:
-    def __init__(self,name,value):
-        self.name = name
-        self.value = value
-        self.type = 'VAR'
-
-    def __repr__(self):
-        # 'x:THREE'
-        return f"{self.name}:{self.value}"
-
-class MonoToken:
-    def __init__(self,type_):
-        self.type = type_
-
-    def __repr__(self):
-        # 'IS'
-        return f"{self.type}"
-
-class DelToken:
-    def __repr__(self):
-        # 'DEL'
-        return f"DEL"
 
 ########################################
 # LEXER
@@ -83,8 +31,6 @@ class Lexer:
     def make_tokens(self):
         tokens = []
 
-        # self.next()
-
         while self.current_char:
             # ignore blank space
             if self.current_char in " \t\n":
@@ -92,34 +38,36 @@ class Lexer:
 
             # lowercase -> make variable
             elif self.current_char.islower() or self.current_char == '_':
-                tokens.append(VarToken(*self.make_variable()))
+                tokens.append(Tokens.VarToken(*self.make_variable()))
                 self.next()
             # uppercase -> keyword
             else:
                 string_ = self.make_string()
                 # if string is not digit ex: ADD
                 if string_ in OTHER:
-                    tokens.append(Token(string_, OTHER[string_]))
+                    tokens.append(Tokens.Token(string_, OTHER[string_]))
                     self.next()
                 # if string is digit ex: TWO
                 elif string_ in DIGITS:
-                    tokens.append(Token('DOT' if string_ == 'DOT' else 'NUM', DIGITS[string_]))
+                    tokens.append(Tokens.Token('DOT' if string_ == 'DOT' else 'NUM', DIGITS[string_]))
                     self.next()
                 elif string_ in MONOS:
-                    tokens.append(MonoToken(string_))
+                    tokens.append(Tokens.MonoToken(string_))
+                elif string_ in CONSTANTS:
+                    tokens.append(Tokens.ConstantToken(string_))
                 elif string_ == 'DEL':
-                    tokens.append(DelToken)
+                    tokens.append(Tokens.DelToken)
                 # EOF
                 elif self.current_char == 'EOF':
                     break
                 # Return any errors
                 else:
                     print(self.text)
-                    return Error(self.index, len(string_), "Unknown word")
+                    return Errors.Error(self.index, len(string_), "Unknown word")
 
         if len(tokens) > 0:
             return self.make_numbers(tokens)
-        return Error(self.index,1,f"Unknown character:{self.current_char}")
+        return Errors.Error(self.index,1,f"Unknown character:{self.current_char}")
 
     def make_variable(self):
         var_str = self.current_char
@@ -166,26 +114,32 @@ class Lexer:
             else:
                 # float or integer
                 if num_str:
-                    final_tokens.append(Token("FLT" if '.' in num_str else "INT",num_str))
+                    final_tokens.append(Tokens.Token("FLT" if '.' in num_str else "INT",num_str))
                     num_str = ''
                 final_tokens.append(token)
 
         # ensure all digits accounted for
         if num_str:
-            final_tokens.append(Token("FLT" if '.' in num_str else "INT",num_str))
+            final_tokens.append(Tokens.Token("FLT" if '.' in num_str else "INT",num_str))
 
         return final_tokens
 
 
 def token_test():
-    strings = [
-        # valid
-        'DEL var NEG TWO ONE DOT FOUR ADD THREE THREE MUL var_one'
-    ]
-    testing = 0
-    for string in strings:
-        lexer = Lexer(string)
-        print(lexer.make_tokens())
-        testing += 1
+    strings = {
+        'num < 9':'ONE',
+        'num > 9':'ONE TWO',
+        'decimal':'ONE TWO DOT THREE FOUR',
+        'negative':'NEG ONE TWO THREE FOUR',
+        'neg dec':'NEG ONE TWO DOT THREE FOUR',
+        'variable':'var var_one',
+        'operators':'ADD SUB MUL DIV FLR MOD POW',
+        'monos':'IS CLG FLR RND DEL LOG SIN COS TAN'
+    }
 
-token_test()
+    for string in strings:
+        lexer = Lexer(strings[string])
+        line = f"| {string}{' '*(10-len(string))}: {lexer.make_tokens()}"
+        print(line)
+
+# token_test()

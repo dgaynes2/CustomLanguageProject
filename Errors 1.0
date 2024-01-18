@@ -1,0 +1,32 @@
+class Error:
+    __slots__ = ('location','length','message')
+
+    def __init__(self,location,length,message=None):
+        self.location = location
+        self.length = length
+        self.message = message
+
+    def __str__(self):
+        return f"{self.error_arrow()}\n{self.__class__.__name__}: {self.message} in positions {self.location} to {self.location + self.length-1}"
+
+    def error_arrow(self):
+        # draws ^ under entire error location
+        return f"{' ' * (self.location-self.length) + ''}{'^'*self.length}"
+
+class DivideByZeroError:
+    def __repr__(self):
+        return 'Error: Attempted to divide by 0'
+
+class InvalidOperatorError:
+    def __init__(self,op):
+        self.op = op
+
+    def __repr__(self):
+        return f'Error: Invalid operator: {self.op}'
+
+class InvalidOperandError:
+    def __init__(self,op):
+        self.op = op
+
+    def __repr__(self):
+        return f'Error: Invalid operand: {self.op}'

@@ -24,20 +24,31 @@ class Parser:
 
     def apply_operation(self, result, op, operand):
         # Apply binary operations based on the given operator
-        if op == 'ADD':
-            return result + operand
-        elif op == 'SUB':
-            return result - operand
-        elif op == 'MUL':
-            return result * operand
-        elif op == 'DIV' and operand != 0:
-            return result / operand
-        elif op == 'FLD' and operand != 0:
-            return result // operand
-        elif op == 'MOD' and operand != 0:
-            return result % operand
+        assert operand is not None, 'Operand cannot be None'
+        if type(operand) in [int,float]:
+
+            if op == 'ADD':
+                return result + operand
+            elif op == 'SUB':
+                return result - operand
+            elif op == 'MUL':
+                return result * operand
+            elif op == 'DIV': # /
+                if operand != 0:
+                    return result / operand
+                return Errors.DivideByZeroError()
+            elif op == 'FLD': # //
+                if operand != 0:
+                    return result // operand
+                return Errors.DivideByZeroError()
+            elif op == 'MOD': # %
+                if operand != 0:
+                    return result % operand
+                return Errors.DivideByZeroError()
+            else:
+                return Errors.InvalidOperatorError(op)
         else:
-            return f'Error: Invalid operation {op}'
+            return Errors.InvalidOperandError(operand)
 
     def parse(self):
         return self.parse_var()

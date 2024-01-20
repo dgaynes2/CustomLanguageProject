@@ -9,6 +9,7 @@ LETTERS = KEYLETS + VARLETS
 DIGITS = {'ZERO':'0','ONE':'1','TWO':'2','THREE':'3','FOUR':'4','FIVE':'5','SIX':'6','SEVEN':'7','EIGHT':'8','NINE':'9','DOT':'.'}
 OTHER = {'ADD': '+', 'SUB': '-', 'MUL': '*', 'DIV': '/', 'FLD':'//', 'MOD': '%', 'POW': '**', 'NEG': '-', 'L': '(', 'R': ')'}
 MONOS = {'IS','CLG','FLR','RND','DEL','LOG','SIN','COS','TAN'}
+COMPARATIVES = {'GT':'>','LT':'<','GEQ':'>=','LEQ':'<=','EQ':'=='}
 CONSTANTS = {'PI','E'} # add new constants to parser as well
 
 
@@ -55,6 +56,8 @@ class Lexer:
                     tokens.append(Tokens.MonoToken(string_))
                 elif string_ in CONSTANTS:
                     tokens.append(Tokens.ConstantToken(string_))
+                elif string_ in COMPARATIVES:
+                    tokens.append(Tokens.ComparativeToken(string_, COMPARATIVES[string_]))
                 elif string_ == 'DEL':
                     tokens.append(Tokens.DelToken)
                 # EOF
@@ -117,6 +120,7 @@ class Lexer:
                     final_tokens.append(Tokens.Token("FLT" if '.' in num_str else "INT",num_str))
                     num_str = ''
                 final_tokens.append(token)
+                decimal_count = 0
 
         # ensure all digits accounted for
         if num_str:
@@ -124,6 +128,9 @@ class Lexer:
 
         return final_tokens
 
+# text = 'L THREE DOT FIVE SUB SIX R MUL TWO FLD FOUR GEQ L SEVEN DOT SEVEN SEVEN SEVEN POW THREE R DIV ONE ZERO ZERO'
+# lexer = Lexer(text).make_tokens()
+# print(lexer)
 
 def token_test():
     strings = {
@@ -134,12 +141,15 @@ def token_test():
         'neg dec':'NEG ONE TWO DOT THREE FOUR',
         'variable':'var var_one',
         'operators':'ADD SUB MUL DIV FLR MOD POW',
-        'monos':'IS CLG FLR RND DEL LOG SIN COS TAN'
+        'monos':'IS CLG FLR RND DEL LOG SIN COS TAN',
+        'comps':'GT LT GEQ LEQ EQ',
+        'other': 'L R'
     }
 
     for string in strings:
         lexer = Lexer(strings[string])
         line = f"| {string}{' '*(10-len(string))}: {lexer.make_tokens()}"
         print(line)
+
 
 # token_test()

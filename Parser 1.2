@@ -26,7 +26,6 @@ class Parser:
         # Apply binary operations based on the given operator
         assert operand is not None, 'Operand cannot be None'
         if type(operand) in [int,float]:
-
             if op == 'ADD':
                 return result + operand
             elif op == 'SUB':
@@ -87,17 +86,39 @@ class Parser:
                     return f'Error: variable "{variable_name}" not found'
         return self.parse_expression()
 
+    def handle_comparisons(self,left,op,right):
+        if isinstance(left,(int,float)) and isinstance(right,(int,float)):
+            if op == 'GT':
+                return 1 if left > right else 0
+            elif op == 'LT':
+                return 1 if left < right else 0
+            elif op == 'GEQ':
+                return 1 if left >= right else 0
+            elif op == 'LEQ':
+                return 1 if left <= right else 0
+            elif op == 'EQ':
+                return 1 if left == right else 0
+            else:
+                return Errors.InvalidOperandError(op)
+        else:
+            return Errors.InvalidOperandError(f"Invalid operands for comparison: {left}, {right}")
+
     def parse_expression(self):
         # Parse addition and subtraction
         result = self.parse_term()
 
-        while self.current_token and self.current_token.type in ['ADD', 'SUB']:
+        while self.current_token and self.current_token.type in ['ADD','SUB','GT','LT','GEQ','LEQ','EQ']:
             if self.current_token.type == 'ADD':
                 self.next()
                 result += self.parse_term()
             elif self.current_token.type == 'SUB':
                 self.next()
                 result -= self.parse_term()
+            elif self.current_token.type in ['GT','LT','GEQ','LEQ','EQ']:
+                op = self.current_token.type
+                self.next()
+                right_operand = self.parse_term()
+                result = self.handle_comparisons(result,op,right_operand)
         return result
 
     def parse_term(self):
